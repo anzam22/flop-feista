@@ -11,6 +11,7 @@ export const playerId =
 type Handlers = {
   onState: (s: NetState) => void;
   onRoster: (roster: { id: string; name: string }[]) => void;
+  onConnection?: (status: "connecting" | "connected" | "error" | "idle", message?: string) => void;
 };
 
 export function useGameChannel(roomCode: string, name: string, handlers: Handlers) {
@@ -19,6 +20,7 @@ export function useGameChannel(roomCode: string, name: string, handlers: Handler
   h.current = handlers;
 
   useEffect(() => {
+    h.current.onConnection?.("connecting");
     const channel = supabase.channel(`game:${roomCode}`, {
       config: { broadcast: { self: false }, presence: { key: playerId } },
     });
@@ -39,7 +41,14 @@ export function useGameChannel(roomCode: string, name: string, handlers: Handler
       })
       .subscribe((status) => {
         console.log("[net] channel:", status);
-        if (status === "SUBSCRIBED") channel.track({ name });
+        if (status === "SUBSCRIBED") {
+          channel.track({ name });
+          h.current.onConnection?.("connected");
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          h.current.onConnection?.("error", String(status));
+        } else if (status === "CLOSED") {
+          h.current.onConnection?.("idle");
+        }
       });
 
     channelRef.current = channel;
@@ -50,6 +59,7 @@ export function useGameChannel(roomCode: string, name: string, handlers: Handler
       net.channel = null;
       net.remotes.clear();
       net.world = null;
+      h.current.onConnection?.("idle");
       supabase.removeChannel(channel);
     };
   }, [roomCode]);

@@ -1,67 +1,78 @@
-// Level layout for "Jelly Docks" — a short co-op physics course.
-// All platforms are boxes with their TOP surface at y = 0 unless noted.
-
-export type Platform = {
-  pos: [number, number, number];
-  size: [number, number, number];
-  color: string;
-};
+// "Wobble Ferry" — a rocking ferry deck. The boat stays at the world origin and
+// the sea/obstacles scroll past, so all deck coordinates below are fixed.
 
 export const PALETTE = {
-  sky: "#bfe9ff",
-  fog: "#cdeeff",
-  deck: "#ffd79a",
-  deckAlt: "#ffc16b",
-  mid: "#a8e6a1",
-  finish: "#ffb3d1",
-  crate: "#f7854b",
-  ball: "#ff6b8b",
-  bar: "#8f7bff",
-  gate: "#6fc6ff",
-  plate: "#ffe66d",
-  plateOn: "#7bf59a",
-  players: ["#ff7a5c", "#4fc3f7", "#ffd54f", "#a78bfa", "#66e2a0", "#ff8fd0"],
+  sky: "#bfe7ff",
+  fog: "#cfeaf6",
+  sea: "#2f8ec9",
+  deck: "#f0c48a",
+  deckTrim: "#e2703a",
+  hull: "#ef5f4c",
+  cabin: "#fff3df",
+  metal: "#9fb4c7",
+  crate: "#f2a03d",
+  pax: ["#ff8fb1", "#8fd6ff", "#ffe07a", "#b79bff"],
+  leak: "#3fd2ff",
+  zoneCargo: "#ffd98a",
+  zonePax: "#ffb6d5",
+  roles: ["#4fc3f7", "#ffb74d", "#81c784", "#ff8a9c"],
 };
 
-export const PLATFORMS: Platform[] = [
-  { pos: [0, -0.5, -22], size: [20, 1, 16], color: PALETTE.deck },
-  { pos: [0, -0.5, -10], size: [7, 1, 10], color: PALETTE.deckAlt },
-  { pos: [0, -0.5, 2], size: [26, 1, 24], color: PALETTE.mid },
-  { pos: [0, -0.5, 17], size: [9, 1, 8], color: PALETTE.deckAlt },
-  { pos: [0, -0.5, 27], size: [16, 1, 14], color: PALETTE.finish },
-  // low side ledges on the mid arena for goofy climbing
-  { pos: [-11, 0.4, 2], size: [2, 0.8, 20], color: PALETTE.deckAlt },
-  { pos: [11, 0.4, 2], size: [2, 0.8, 20], color: PALETTE.deckAlt },
-  // ramp-ish step up to the gate corridor
-  { pos: [0, 0.1, 13.5], size: [7, 0.6, 3], color: PALETTE.deckAlt },
-];
+export const DECK = { w: 14, l: 26, y: 0 };
 
-export const PLATES: [number, number, number][] = [
-  [-7, 0, -3],
-  [0, 0, 7],
-  [7, 0, -3],
-];
-export const PLATE_RADIUS = 1.9;
+export const WHEEL_POS: [number, number, number] = [0, 0, 10.2];
+export const ENGINE_POS: [number, number, number] = [0, 0, -10.2];
+export const CARGO_ZONE = { x: -4.2, z: 0, w: 4.6, l: 7 };
+export const PAX_ZONE = { x: 4.2, z: 0, w: 4.6, l: 7 };
+export const STATION_RADIUS = 2.6;
 
 export const CRATE_SPAWNS: [number, number, number][] = [
-  [-4.5, 1.5, -20],
-  [0, 1.5, -24],
-  [4.5, 1.5, -20],
-];
-export const BALL_SPAWN: [number, number, number] = [0, 2, -2];
-
-export const SPINNERS: { pos: [number, number, number]; speed: number; length: number }[] = [
-  { pos: [0, 0.9, -12], speed: 1.1, length: 9 },
-  { pos: [0, 0.9, -7], speed: -1.4, length: 9 },
-  { pos: [0, 1.1, 4], speed: 0.8, length: 16 },
+  [-5, 1.2, -2],
+  [-3.4, 1.2, 0.4],
+  [-5, 1.2, 2.4],
+  [-3.4, 1.2, -3.6],
 ];
 
-export const GATE_POS: [number, number, number] = [0, 1.6, 12];
-export const FINISH: [number, number, number] = [0, 0, 28];
-export const FINISH_RADIUS = 4.5;
-export const VOID_Y = -14;
+export const PAX_SPAWNS: [number, number, number][] = [
+  [4.6, 1.2, -2],
+  [3.2, 1.2, 0.6],
+  [4.6, 1.2, 2.6],
+];
+
+export const ROLES = [
+  {
+    key: "pilot",
+    name: "Pilot",
+    station: "Wheel (bow)",
+    duty: "Steer around rocks, set the throttle. Crashes tear holes in the hull.",
+  },
+  {
+    key: "engineer",
+    name: "Engineer",
+    station: "Engine (stern)",
+    duty: "Hold E at the engine to cool it. Overheat = power loss and fire.",
+  },
+  {
+    key: "deckhand",
+    name: "Deckhand",
+    station: "Anywhere wet",
+    duty: "Hold E on leaks to patch them. Big leaks need two people at once.",
+  },
+  {
+    key: "crew",
+    name: "Crew",
+    station: "Cargo + passengers",
+    duty: "Shove crates and passengers back into their pens before they slide off.",
+  },
+] as const;
+
+export type RoleKey = (typeof ROLES)[number]["key"];
+
+export const TOTAL_DISTANCE = 1600;
+export const VOID_Y = -4;
 
 export function spawnPoint(index: number): [number, number, number] {
-  const a = (index / 6) * Math.PI * 2;
-  return [Math.cos(a) * 4, 1.2, -22 + Math.sin(a) * 3];
+  const lane = [-2.2, 2.2, -2.2, 2.2, 0, 0][index % 6];
+  const row = [6.5, 6.5, -6.5, -6.5, 4, -4][index % 6];
+  return [lane, 1.4, row];
 }

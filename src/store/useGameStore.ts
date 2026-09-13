@@ -1,27 +1,33 @@
 import { create } from "zustand";
+import type { RoleKey } from "@/lib/level";
 
-export type Roster = { id: string; name: string; color: string }[];
+export type RosterEntry = { id: string; name: string; roles: RoleKey[] };
 
 type GameState = {
-  phase: "menu" | "playing" | "won";
+  phase: "menu" | "playing" | "docked" | "sunk";
   name: string;
   room: string;
-  roster: Roster;
-  platesOn: number;
-  gateOpen: boolean;
-  time: number;
-  falls: number;
-  hint: string;
+  roster: RosterEntry[];
+  myRoles: RoleKey[];
+  integrity: number;
+  heat: number;
+  progress: number; // 0..1
+  speed: number;
+  leaks: number;
+  crates: number;
+  pax: number;
+  alert: string;
+  alertAt: number;
+  nearStation: string;
   setName: (n: string) => void;
   setRoom: (r: string) => void;
   start: () => void;
-  setRoster: (r: Roster) => void;
-  setPlates: (n: number, open: boolean) => void;
-  setTime: (t: number) => void;
-  addFall: () => void;
-  setHint: (h: string) => void;
-  win: () => void;
-  replay: () => void;
+  setRoster: (r: RosterEntry[], myRoles: RoleKey[]) => void;
+  setMeters: (m: Partial<Pick<GameState, "integrity" | "heat" | "progress" | "speed" | "leaks" | "crates" | "pax">>) => void;
+  setNearStation: (s: string) => void;
+  pushAlert: (a: string) => void;
+  finish: (won: boolean) => void;
+  backToMenu: () => void;
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -29,19 +35,24 @@ export const useGameStore = create<GameState>((set) => ({
   name: "",
   room: "",
   roster: [],
-  platesOn: 0,
-  gateOpen: false,
-  time: 0,
-  falls: 0,
-  hint: "",
+  myRoles: [],
+  integrity: 100,
+  heat: 0,
+  progress: 0,
+  speed: 0,
+  leaks: 0,
+  crates: 4,
+  pax: 3,
+  alert: "",
+  alertAt: 0,
+  nearStation: "",
   setName: (name) => set({ name }),
   setRoom: (room) => set({ room }),
-  start: () => set({ phase: "playing", time: 0, falls: 0 }),
-  setRoster: (roster) => set({ roster }),
-  setPlates: (platesOn, gateOpen) => set({ platesOn, gateOpen }),
-  setTime: (time) => set({ time }),
-  addFall: () => set((s) => ({ falls: s.falls + 1 })),
-  setHint: (hint) => set({ hint }),
-  win: () => set((s) => (s.phase === "playing" ? { phase: "won" } : {})),
-  replay: () => set({ phase: "playing", time: 0, falls: 0, platesOn: 0, gateOpen: false }),
+  start: () => set({ phase: "playing", integrity: 100, heat: 0, progress: 0 }),
+  setRoster: (roster, myRoles) => set({ roster, myRoles }),
+  setMeters: (m) => set(m),
+  setNearStation: (nearStation) => set({ nearStation }),
+  pushAlert: (alert) => set({ alert, alertAt: Date.now() }),
+  finish: (won) => set({ phase: won ? "docked" : "sunk" }),
+  backToMenu: () => set({ phase: "menu" }),
 }));

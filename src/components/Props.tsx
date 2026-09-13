@@ -101,7 +101,7 @@ export function Props() {
           <mesh castShadow>
             <sphereGeometry args={[0.52, 20, 16]} />
             <meshStandardMaterial
-              color={PALETTE.pax[i % PALETTE.pax.length]}
+              color={PALETTE.pax[i % PALETTE.pax.length] ?? "#ff8fb1"}
               roughness={0.5}
             />
           </mesh>

@@ -78,7 +78,6 @@ export function Ferry() {
     sim.roll =
       Math.sin(t * 0.82) * rough +
       Math.sin(t * 0.37 + 1.7) * rough * 0.7 +
-      w.st_unused_placeholder_roll() * 0 +
       sim.shake * Math.sin(t * 26) * 0.09;
     sim.pitch = Math.sin(t * 0.61) * rough * 0.8 + sim.shake * Math.sin(t * 21) * 0.06;
 

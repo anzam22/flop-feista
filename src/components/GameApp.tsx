@@ -8,7 +8,7 @@ import { Props } from "@/components/Props";
 import { Sim } from "@/components/Sim";
 import { PALETTE, ROLES } from "@/lib/level";
 import { roomCodeFromUrl } from "@/lib/room";
-import { net } from "@/lib/net-shared";
+import { net, resetNet } from "@/lib/net-shared";
 import { sim } from "@/lib/sim";
 import { useGameStore } from "@/store/useGameStore";
 
@@ -88,6 +88,8 @@ function GameHud() {
   const crates = useGameStore((s) => s.crates);
   const pax = useGameStore((s) => s.pax);
   const alert = useGameStore((s) => s.alert);
+  const connection = useGameStore((s) => s.connection);
+  const connectionMessage = useGameStore((s) => s.connectionMessage);
   const [copied, setCopied] = useState(false);
 
   const copyLink = async () => {
@@ -111,6 +113,21 @@ function GameHud() {
             <span>ROOM {room || "----"}</span>
             <span className="h-1 w-1 rounded-full bg-emerald-300" />
             <span>{roster.length || 1}/4 ABOARD</span>
+            <span
+              className={
+                connection === "connected"
+                  ? "text-emerald-300"
+                  : connection === "error"
+                    ? "text-rose-300"
+                    : "text-amber-200"
+              }
+            >
+              {connection === "connected"
+                ? "LIVE"
+                : connection === "error"
+                  ? "OFFLINE"
+                  : "CONNECTING"}
+            </span>
           </div>
         </div>
         <button
@@ -181,6 +198,12 @@ function GameHud() {
           <span className="font-bold text-white/90">SPACE</span> jump
         </div>
       </div>
+
+      {connection === "error" ? (
+        <div className="absolute left-1/2 top-28 max-w-md -translate-x-1/2 rounded-full border border-rose-300/25 bg-rose-950/80 px-5 py-2 text-center text-sm font-semibold text-rose-100 shadow-xl backdrop-blur-md">
+          Crew link unavailable: {connectionMessage || "retrying…"}
+        </div>
+      ) : null}
 
       {alert ? (
         <div className="absolute left-1/2 top-28 max-w-md -translate-x-1/2 rounded-full border border-amber-300/25 bg-amber-950/75 px-5 py-2 text-center text-sm font-semibold text-amber-100 shadow-xl backdrop-blur-md">
@@ -344,6 +367,7 @@ export function GameApp() {
     setName(cleanName);
     setRoom(cleanRoom);
     setRoomInUrl(cleanRoom);
+    resetNet();
     sim.reset();
     start();
   };

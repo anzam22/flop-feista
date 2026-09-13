@@ -23,6 +23,7 @@ function assignRoles(ids: string[]) {
 
 export function Multiplayer({ name }: { name: string }) {
   const room = useGameStore((s) => s.room);
+  const myRoles = useGameStore((s) => s.myRoles);
   const [ids, setIds] = useState<string[]>([]);
   const roster = useRef(new Set<string>());
   const states = useRef(new Map<string, NetState>());
@@ -39,11 +40,32 @@ export function Multiplayer({ name }: { name: string }) {
       const allIds = sorted.map((p) => p.id);
       const owner = assignRoles(allIds);
       sim.roleOwner = owner;
-      net.isCoordinator = allIds[0] === playerId || allIds.length === 0;
+      const wasCoordinator = net.isCoordinator;
+      const nextCoordinator = allIds[0] === playerId || allIds.length === 0;
+      if (!wasCoordinator && nextCoordinator && net.world) {
+        const snapshot = net.world;
+        sim.world = {
+          ...sim.world,
+          sp: snapshot.sp,
+          ds: snapshot.ds,
+          bx: snapshot.bx,
+          hz: snapshot.hz,
+          ig: snapshot.ig,
+          cg: snapshot.cg,
+          px: snapshot.px,
+          ov: snapshot.ov,
+          lk: snapshot.lk.map((leak) => ({ ...leak })),
+        };
+        if (snapshot.ov === 1) useGameStore.getState().finish(true);
+        if (snapshot.ov === 2) useGameStore.getState().finish(false);
+      }
+      net.isCoordinator = nextCoordinator;
       net.myIndex = Math.max(0, allIds.indexOf(playerId));
       net.playerCount = Math.max(1, allIds.length);
 
-      sorted.forEach((p, i) => colors.current.set(p.id, PALETTE.roles[i % PALETTE.roles.length] ?? "#4fc3f7"));
+      sorted.forEach((p, i) =>
+        colors.current.set(p.id, PALETTE.roles[i % PALETTE.roles.length] ?? "#4fc3f7"),
+      );
 
       useGameStore.getState().setRoster(
         sorted.map((p) => ({
@@ -63,6 +85,9 @@ export function Multiplayer({ name }: { name: string }) {
         }
       }
       setIds([...roster.current]);
+    },
+    onConnection: (status, message) => {
+      useGameStore.getState().setConnection(status, message);
     },
     onState: (s) => {
       if (roster.current.has(s.id)) {
@@ -128,6 +153,7 @@ export function Multiplayer({ name }: { name: string }) {
         ry,
         st: net.local.st,
         th: net.local.th,
+        roles: myRoles,
         act: net.local.act,
       } satisfies NetState,
     });

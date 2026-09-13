@@ -47,7 +47,8 @@ export function Sim() {
         // ---- pilot: throttle + steering, only while manning the wheel ----
         const pilot = inputFor("pilot");
         const pilotAtWheel =
-          !!pilot && Math.hypot(pilot.x - WHEEL_POS[0], pilot.z - WHEEL_POS[2]) < STATION_RADIUS + 0.6;
+          !!pilot &&
+          Math.hypot(pilot.x - WHEEL_POS[0], pilot.z - WHEEL_POS[2]) < STATION_RADIUS + 0.6;
         const th = pilotAtWheel ? (pilot?.th ?? 0) : 0;
         const st = pilotAtWheel ? (pilot?.st ?? 0) : 0;
 
@@ -57,7 +58,10 @@ export function Sim() {
           !!eng &&
           eng.act === 1 &&
           Math.hypot(eng.x - ENGINE_POS[0], eng.z - ENGINE_POS[2]) < STATION_RADIUS + 0.6;
-        w.hz = Math.max(0, Math.min(1, w.hz + (0.055 * Math.max(th, 0) - (engAtPost ? 0.32 : 0) - 0.012) * dt));
+        w.hz = Math.max(
+          0,
+          Math.min(1, w.hz + (0.055 * Math.max(th, 0) - (engAtPost ? 0.32 : 0) - 0.012) * dt),
+        );
         const power = w.hz > 0.85 ? 0.3 : 1;
         if (w.hz > 0.92) w.ig -= 3.2 * dt;
 
@@ -90,7 +94,10 @@ export function Sim() {
         for (let i = w.lk.length - 1; i >= 0; i--) {
           const leak = w.lk[i]!;
           const patchers = crowd.filter(
-            (p) => p.act === 1 && Math.hypot(p.x - leak.x, p.z - leak.z) < 2,
+            (p) =>
+              p.act === 1 &&
+              (p.roles?.includes("deckhand") || p.roles?.includes("crew")) &&
+              Math.hypot(p.x - leak.x, p.z - leak.z) < 2,
           ).length;
           const need = leak.b ? 2 : 1;
           if (patchers >= need) leak.p += (patchers / need) * 0.45 * dt;

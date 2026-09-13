@@ -92,7 +92,10 @@ export function Player({ index }: { index: number }) {
       // Manning the wheel: WASD drives the boat, the body stays planted.
       net.local.st = side;
       net.local.th = fwd;
-      body.setLinvel({ x: (WHEEL_POS[0] - p.x) * 4, y: v.y, z: (WHEEL_POS[2] - 1.6 - p.z) * 4 }, true);
+      body.setLinvel(
+        { x: (WHEEL_POS[0] - p.x) * 4, y: v.y, z: (WHEEL_POS[2] - 1.6 - p.z) * 4 },
+        true,
+      );
       if (visual.current) {
         const want = Math.atan2(0, -1);
         visual.current.rotation.y += (want - visual.current.rotation.y) * 10 * dt;
@@ -124,11 +127,15 @@ export function Player({ index }: { index: number }) {
       anim.current.act = interact;
       if (visual.current && len > 0) {
         const want = Math.atan2(dx, dz);
-        const diff = Math.atan2(Math.sin(want - visual.current.rotation.y), Math.cos(want - visual.current.rotation.y));
+        const diff = Math.atan2(
+          Math.sin(want - visual.current.rotation.y),
+          Math.cos(want - visual.current.rotation.y),
+        );
         visual.current.rotation.y += diff * Math.min(1, 14 * dt);
       }
     }
 
+    net.local.roles = rolesRef.current;
     net.local.act = interact ? 1 : 0;
 
     // jump (ground ray, excluding self)

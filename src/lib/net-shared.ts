@@ -1,4 +1,5 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RoleKey } from "@/lib/level";
 
 export type Leak = { i: number; x: number; z: number; p: number; b: 0 | 1 };
 
@@ -13,6 +14,8 @@ export type NetState = {
   st: number;
   /** throttle input (-1..1) */
   th: number;
+  /** roles currently owned by this player */
+  roles: RoleKey[];
   /** interact held */
   act: 0 | 1;
 };
@@ -42,5 +45,20 @@ export const net = {
   /** remote avatar positions + inputs, written by Multiplayer each frame */
   remotes: new Map<string, NetState>(),
   /** local player's live position + inputs */
-  local: { x: 0, y: 1.4, z: 6, st: 0, th: 0, act: 0 as 0 | 1 },
+  local: { x: 0, y: 1.4, z: 6, st: 0, th: 0, roles: [] as RoleKey[], act: 0 as 0 | 1 },
 };
+
+export function resetNet() {
+  net.isCoordinator = true;
+  net.myIndex = 0;
+  net.playerCount = 1;
+  net.world = null;
+  net.remotes.clear();
+  net.local.x = 0;
+  net.local.y = 1.4;
+  net.local.z = 6;
+  net.local.st = 0;
+  net.local.th = 0;
+  net.local.roles = [];
+  net.local.act = 0;
+}

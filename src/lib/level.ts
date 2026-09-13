@@ -71,8 +71,10 @@ export type RoleKey = (typeof ROLES)[number]["key"];
 export const TOTAL_DISTANCE = 1600;
 export const VOID_Y = -4;
 
+const SPAWN_LANES = [-2.2, 2.2, -2.2, 2.2, 0, 0];
+const SPAWN_ROWS = [6.5, 6.5, -6.5, -6.5, 4, -4];
+
 export function spawnPoint(index: number): [number, number, number] {
-  const lane = [-2.2, 2.2, -2.2, 2.2, 0, 0][index % 6];
-  const row = [6.5, 6.5, -6.5, -6.5, 4, -4][index % 6];
-  return [lane, 1.4, row];
+  const i = ((index % 6) + 6) % 6;
+  return [SPAWN_LANES[i] ?? 0, 1.4, SPAWN_ROWS[i] ?? 0];
 }

@@ -8,7 +8,8 @@ import { Props } from "@/components/Props";
 import { Sim } from "@/components/Sim";
 import { PALETTE, ROLES } from "@/lib/level";
 import { roomCodeFromUrl } from "@/lib/room";
-import { net, sim } from "@/lib/net-shared";
+import { net } from "@/lib/net-shared";
+import { sim } from "@/lib/sim";
 import { useGameStore } from "@/store/useGameStore";
 
 function setRoomInUrl(room: string) {
@@ -200,7 +201,7 @@ export function GameApp() {
   const phase = useGameStore((s) => s.phase);
   const room = useGameStore((s) => s.room);
   const name = useGameStore((s) => s.name);
-  const roster = useGameStore((s) => s.roster);
+  useGameStore((s) => s.roster);
   const setRoom = useGameStore((s) => s.setRoom);
   const setName = useGameStore((s) => s.setName);
   const start = useGameStore((s) => s.start);
@@ -223,7 +224,7 @@ export function GameApp() {
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[#bfe7ff]">
-      <GameCanvas name={name} playerIndex={Math.max(0, net.myIndex)} key={roster.length} />
+      <GameCanvas name={name} playerIndex={Math.max(0, net.myIndex)} />
       <GameHud />
     </main>
   );
